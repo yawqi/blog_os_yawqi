@@ -1,10 +1,14 @@
 #![no_std]
 #![no_main]
+#![allow(dead_code)]
 
 use core::panic::PanicInfo;
 
+mod vga_buffer;
+
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
 
@@ -12,12 +16,7 @@ static HELLO: &[u8] = b"Hello, World!";
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
-    for (i, &byte) in HELLO.iter().enumerate() {
-        unsafe {
-            *vga_buffer.offset(2 * i as isize) = byte;
-            *vga_buffer.offset(2 * i as isize + 1) = 0xb;
-        }
-    }
+    println!("Hello, world!");
+    panic!("Some panic info!");
     loop {}
 }
