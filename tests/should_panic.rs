@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use blog_os_yawqi::{exit_qemu, serial_println, QemuExitCode};
+use blog_os_yawqi::{exit_qemu, hlt_loop, serial_println, QemuExitCode};
 use core::panic::PanicInfo;
 
 #[no_mangle]
@@ -9,7 +9,7 @@ pub extern "C" fn _start() -> ! {
     should_panic();
     serial_println!("[test not panic as expected]");
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    hlt_loop();
 }
 
 fn should_panic() {
@@ -21,5 +21,5 @@ fn should_panic() {
 fn panic(info: &PanicInfo) -> ! {
     serial_println!("Panic as expected [ok]");
     exit_qemu(QemuExitCode::Success);
-    loop {}
+    hlt_loop();
 }

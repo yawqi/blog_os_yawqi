@@ -4,13 +4,13 @@
 #![test_runner(blog_os_yawqi::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use blog_os_yawqi::{println, test_panic_handler};
+use blog_os_yawqi::{hlt_loop, println, test_panic_handler};
 use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     test_main();
-    loop {}
+    hlt_loop();
 }
 
 #[panic_handler]

@@ -6,7 +6,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use blog_os_yawqi::gdt::DOUBLE_FAULT_STACK_INDEX;
-use blog_os_yawqi::{exit_qemu, serial_print, serial_println, QemuExitCode};
+use blog_os_yawqi::{exit_qemu, hlt_loop, serial_print, serial_println, QemuExitCode};
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use x86_64::structures::idt::InterruptDescriptorTable;
@@ -54,5 +54,5 @@ extern "x86-interrupt" fn test_double_fault_hander(
 ) -> ! {
     serial_println!("[ok]");
     exit_qemu(QemuExitCode::Success);
-    loop {}
+    hlt_loop();
 }

@@ -1,9 +1,19 @@
-use core::panic;
-
 use crate::gdt::DOUBLE_FAULT_STACK_INDEX;
-use crate::println;
+use crate::{print, println};
+use core::char::DecodeUtf16;
+use core::panic;
 use lazy_static::lazy_static;
+use pc_keyboard::layouts::Us104Key;
+use pic8259::ChainedPics;
+use spin::Mutex;
+use x86_64::instructions::port::PortGeneric;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+
+pub const PIC_1_OFFSET: u8 = 32;
+pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
+
+pub const PICS: spin::Mutex<ChainedPics> =
+    spin::Mutex::new(unsafe { ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) });
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -14,6 +24,8 @@ lazy_static! {
                 .set_handler_fn(double_fault_handler)
                 .set_stack_index(DOUBLE_FAULT_STACK_INDEX);
         }
+        idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
+        idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
         idt
     };
 }
@@ -31,6 +43,58 @@ pub extern "x86-interrupt" fn double_fault_handler(
     _error_code: u64,
 ) -> ! {
     panic!("DOUBLE FAULT EXCEPTION\n{:#?}", stack_frame);
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+pub enum InterruptIndex {
+    Timer = PIC_1_OFFSET,
+    Keyboard,
+}
+
+impl InterruptIndex {
+    fn as_u8(self) -> u8 {
+        self as u8
+    }
+
+    fn as_usize(self) -> usize {
+        self as usize
+    }
+}
+
+pub extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
+    print!(".");
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
+    }
+}
+
+pub extern "x86-interrupt" fn keyboard_interrupt_handler(stack_frame: InterruptStackFrame) {
+    use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
+    use x86_64::instructions::port::Port;
+    lazy_static! {
+        static ref KEYBOARD: Mutex<Keyboard<layouts::Us104Key, ScancodeSet1>> = Mutex::new(
+            Keyboard::new(layouts::Us104Key, ScancodeSet1, HandleControl::Ignore)
+        );
+    }
+
+    let mut port = Port::new(0x60);
+    let scancode: u8 = unsafe { port.read() };
+    let mut keyboard = KEYBOARD.lock();
+    if let Ok(Some(keyevent)) = keyboard.add_byte(scancode) {
+        if let Some(key) = keyboard.process_keyevent(keyevent) {
+            match key {
+                DecodedKey::Unicode(ch) => print!("{}", ch),
+                DecodedKey::RawKey(k) => print!("{:?}", k),
+            }
+        }
+    }
+
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());
+    }
 }
 
 #[test_case]

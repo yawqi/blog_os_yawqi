@@ -5,7 +5,7 @@
 #![test_runner(blog_os_yawqi::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use blog_os_yawqi::println;
+use blog_os_yawqi::{hlt_loop, print, println};
 use core::panic::PanicInfo;
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -15,20 +15,15 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    fn stack_overflow() {
-        stack_overflow();
-    }
-    stack_overflow();
-
     println!("It did not crash!");
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
