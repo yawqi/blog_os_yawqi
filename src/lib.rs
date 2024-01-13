@@ -3,9 +3,12 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(abi_x86_interrupt)]
 
 use core::panic::PanicInfo;
 
+pub mod gdt;
+pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
@@ -42,6 +45,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
     loop {}
 }
@@ -65,4 +69,9 @@ pub fn exit_qemu(code: QemuExitCode) {
         let mut port = Port::new(0xf4);
         port.write(code as u32);
     }
+}
+
+pub fn init() {
+    gdt::init();
+    interrupts::init_idt();
 }

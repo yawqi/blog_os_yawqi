@@ -7,14 +7,20 @@
 
 use blog_os_yawqi::println;
 use core::panic::PanicInfo;
-
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     println!("Hello, world!");
+    blog_os_yawqi::init();
 
     #[cfg(test)]
     test_main();
 
+    fn stack_overflow() {
+        stack_overflow();
+    }
+    stack_overflow();
+
+    println!("It did not crash!");
     loop {}
 }
 
