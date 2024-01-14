@@ -1,9 +1,6 @@
 use bootloader::bootinfo::MemoryMap;
-use bootloader::bootinfo::MemoryRegion;
 use bootloader::bootinfo::MemoryRegionType;
-use bootloader::BootInfo;
 use x86_64::registers::control::Cr3;
-use x86_64::structures::paging::mapper::PageTableFrameMapping;
 use x86_64::structures::paging::page::Page;
 use x86_64::structures::paging::page_table::FrameError;
 use x86_64::structures::paging::FrameAllocator;
@@ -44,7 +41,7 @@ impl BootInfoFrameAllocator {
 
         regions_iter
             .flat_map(|r| {
-                let range = (r.range.start_addr()..r.range.end_addr());
+                let range = r.range.start_addr()..r.range.end_addr();
                 range.step_by(4096)
             })
             .map(|addr| PhysFrame::containing_address(PhysAddr::new(addr)))

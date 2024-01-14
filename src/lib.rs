@@ -5,8 +5,11 @@
 #![reexport_test_harness_main = "test_main"]
 #![feature(abi_x86_interrupt)]
 
+extern crate alloc;
+#[allow(unused_imports)]
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
+pub mod allocator;
 pub mod gdt;
 pub mod interrupts;
 pub mod memory;
@@ -47,7 +50,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 entry_point!(test_kernel_main);
 
 #[cfg(test)]
-pub fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+pub fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
     hlt_loop();
