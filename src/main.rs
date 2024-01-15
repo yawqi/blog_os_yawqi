@@ -6,13 +6,9 @@
 #![reexport_test_harness_main = "test_main"]
 
 extern crate alloc;
-use alloc::boxed::Box;
-use alloc::rc::Rc;
-use alloc::{vec, vec::Vec};
 use blog_os_yawqi::{allocator, hlt_loop, memory, println};
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
-use x86_64::structures::paging::{Page, Translate};
 use x86_64::VirtAddr;
 
 entry_point!(kernel_main);

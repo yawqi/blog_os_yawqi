@@ -1,4 +1,5 @@
 pub mod bump;
+pub mod linked_list;
 
 use alloc::alloc::{GlobalAlloc, Layout};
 use x86_64::{
@@ -10,8 +11,6 @@ use x86_64::{
     VirtAddr,
 };
 
-use self::bump::BumpAllocator;
-
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024;
 
@@ -22,8 +21,15 @@ static DUMMY_ALLOCATOR: DummyAllocator = DummyAllocator;
 // #[global_allocator]
 // static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
+/*
+use bump::BumpAllocator;
 #[global_allocator]
 static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+*/
+
+use linked_list::LinkedListAllocator;
+#[global_allocator]
+static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
 
 unsafe impl GlobalAlloc for DummyAllocator {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
