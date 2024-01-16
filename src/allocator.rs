@@ -1,4 +1,5 @@
 pub mod bump;
+pub mod fixed_size_block;
 pub mod linked_list;
 
 use alloc::alloc::{GlobalAlloc, Layout};
@@ -27,10 +28,14 @@ use bump::BumpAllocator;
 static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 */
 
+/*
 use linked_list::LinkedListAllocator;
-#[global_allocator]
 static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+*/
 
+use fixed_size_block::FixedSizeAllocator;
+#[global_allocator]
+static ALLOCATOR: Locked<FixedSizeAllocator> = Locked::new(FixedSizeAllocator::new());
 unsafe impl GlobalAlloc for DummyAllocator {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
         core::ptr::null_mut()
