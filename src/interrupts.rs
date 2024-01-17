@@ -1,6 +1,7 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 
 use crate::gdt::DOUBLE_FAULT_STACK_INDEX;
+use crate::task::keyboard::push_scancode;
 use crate::{hlt_loop, print, println};
 use core::panic;
 use lazy_static::lazy_static;
@@ -81,16 +82,18 @@ pub extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: Interrupt
 
     let mut port = Port::new(0x60);
     let scancode: u8 = unsafe { port.read() };
-    let mut keyboard = KEYBOARD.lock();
-    if let Ok(Some(keyevent)) = keyboard.add_byte(scancode) {
-        if let Some(key) = keyboard.process_keyevent(keyevent) {
-            match key {
-                DecodedKey::Unicode(ch) => print!("{}", ch),
-                DecodedKey::RawKey(k) => print!("{:?}", k),
+    push_scancode(scancode);
+    /*
+        let mut keyboard = KEYBOARD.lock();
+        if let Ok(Some(keyevent)) = keyboard.add_byte(scancode) {
+            if let Some(key) = keyboard.process_keyevent(keyevent) {
+                match key {
+                    DecodedKey::Unicode(ch) => print!("{}", ch),
+                    DecodedKey::RawKey(k) => print!("{:?}", k),
+                }
             }
         }
-    }
-
+    */
     unsafe {
         PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());

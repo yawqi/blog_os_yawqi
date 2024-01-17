@@ -8,7 +8,7 @@
 extern crate alloc;
 use blog_os_yawqi::{
     allocator, hlt_loop, memory, println,
-    task::{simple_executor::SimpleExecutor, Task},
+    task::{executor::Executor, keyboard::print_keypresses, Task},
 };
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
@@ -36,14 +36,14 @@ pub fn kernel_main(boot_info: &'static BootInfo) -> ! {
     allocator::init_heap(&mut mapper, &mut page_frame_allocator)
         .expect("Create heap memory failed");
 
-    let mut executor = SimpleExecutor::new();
+    let mut executor = Executor::new();
     executor.spawn(Task::new(example_task()));
+    executor.spawn(Task::new(print_keypresses()));
     executor.run();
 
     #[cfg(test)]
     test_main();
     println!("It did not crash!");
-    hlt_loop();
 }
 
 #[cfg(not(test))]
